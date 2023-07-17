@@ -1,4 +1,5 @@
 
+from distutils import config
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -6,8 +7,9 @@ import datetime
 from dotenv import load_dotenv
 import os
 import openai
-#from django.conf.global_settings import OPENAI_API_KEY
-#load_dotenv()
+from django.conf import settings
+
+load_dotenv()
 
 
 
@@ -35,11 +37,6 @@ def create_search_url_from_city_name(city):
     return url
 
 def get_date(numbers): # 20230727
-    current_date = datetime.date.today()
-    # current_year = current_date[0:4]
-    # current_month = current_date[4:6]
-    # curent_day = current_date[6:8]
-
     year = numbers[0:4]
     month = numbers[4:6]
     day = numbers[6:8]
@@ -47,25 +44,26 @@ def get_date(numbers): # 20230727
     return date
 
 
-def get_weather_data_in_string(url,date):
+def get_weather_data_in_string(url):
     result = requests.get(url)
     json_data = requests.Response.json(result)
-    location = json_data['resolvedAddress']
+    #location = json_data['resolvedAddress']
 
     days_data = json_data['days']
     data = ''
     for day in days_data:
-        if day['datetime'] == date:
-            break
-    date = day['datetime']
-    sunrise = day['sunrise']
-    sunset = day['sunset']
-    temp = day['temp']
-    conditions = day['conditions']
-    humidity = day['humidity']
-    windspeed = day['windspeed']
-    description = day['description']
-    data = data + f'location : {location}, date: {date}, Sunrise: {sunrise}, sunset: {sunset}, temp: {temp}, conditions: {conditions}, humidity :{humidity, } windspeed:{windspeed},description:{description}\n '
+    #     if day['datetime'] == date:
+    #         break
+        #date = day['datetime']
+        sunrise = day['sunrise']
+        sunset = day['sunset']
+        temp = day['temp']
+        conditions = day['conditions']
+        humidity = day['humidity']
+        windspeed = day['windspeed']
+        #description = day['description']
+        data = data + f' Sunrise: {sunrise}, sunset: {sunset}, temp: {temp}, conditions: {conditions}, humidity :{humidity, } windspeed:{windspeed} '
+        break
     return data
 
     '''location = json_data['resolvedAddress']
@@ -88,21 +86,13 @@ def get_weather_data_in_string(url,date):
             break
     return data'''
 
-    
-def get_city_weather_update(city,date):
-   url  = create_search_url_from_city_name(city)
-   string_data = get_weather_data_in_string(url,get_date(date))
-   return string_data
 
 
-def get_summary_from_openAI(data,api_key):
-    #openai.api_key = os.getenv("OPENAI_API_KEY")
-    openai.api_key = api_key
-
-
+def get_response_from_openAI(string_data):
+    openai.api_key = os.getenv("OPENAI_API_KEY")
     response = openai.Completion.create(
     model="text-davinci-003",
-    prompt="[INSTRUCTION] Consider yourself a weather forcasting expert .On the basis of following data you have to give us short and simple summary for average human to understand and provide  that this information may vary .The data is as follows " + data,
+    prompt="[INSTRUCTION] Consider yourself a weather forcasting expert .On the basis of following data you have to give us short and simple summary for average human to understand and provide  that as follow  " + string_data,
     temperature=0.5,
     max_tokens=256,
     top_p=1,
@@ -112,17 +102,31 @@ def get_summary_from_openAI(data,api_key):
 
     return response
 
+def get_summary_of_weather(response):
+    summary = response['choices'][0]['text']
+    return summary
+
+def get_city_weather_update(city):
+   url  = create_search_url_from_city_name(city)
+   string_data = get_weather_data_in_string(url)
+   response = get_response_from_openAI(string_data)
+   summary = get_summary_of_weather(response)
+
+   return summary
+
+
+
+
+
+
 if __name__ == "__main__":
 
 
     #print(create_search_url_from_keyword('london'))
     #print(get_city_weather_update('mansehra',get_date('20230720')))
 
-    # weather_data = get_city_weather_update('london','20230720')
-    # print(weather_data)
+    print(get_city_weather_update('london'))
+   
 
-    #print(generate_weather_summary(weather_data))
-    api = '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'
-    data = 'Sunrise: 05:06:48, sunset: 21:06:14, temp: 16.8, conditions: Partially cloudy, humidity :(62.6,) windspeed:10.8.'
-    print(get_summary_from_openAI(data,api))
+
 

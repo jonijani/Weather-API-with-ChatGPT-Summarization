@@ -19,7 +19,7 @@ from api_app import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('<str:city>/<str:date>', views.home, name='home'),
+    path('<str:city>/', views.home, name='home'),
     
 
 ]
