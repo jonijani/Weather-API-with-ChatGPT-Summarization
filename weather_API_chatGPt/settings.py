@@ -119,3 +119,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
