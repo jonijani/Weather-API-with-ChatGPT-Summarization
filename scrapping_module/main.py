@@ -29,8 +29,7 @@ def get_req(url):
         raise Exception('URL is not successful')
     
 def create_search_url_from_city_name(city):
-    #city = input('Enter any city name in world :')
-    key = 'YS5LCHDN6WNKKRUCEYTCGDY3K'
+    key = os.getenv("weather_API_KEY")
     get_key = f'?unitGroup=metric&key={key}'
     res_url = '&contentType=json'
     url = f'{BASE_URL}{city}{get_key}{res_url}'
